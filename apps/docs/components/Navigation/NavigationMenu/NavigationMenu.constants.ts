@@ -3360,7 +3360,7 @@ export const reference = {
       items: [
         {
           name: 'Supabase CLI',
-          url: '/reference/cli/start',
+          url: '/reference/cli/introduction',
           icon: '/img/icons/menu/reference-cli' as `/${string}`,
         },
         {
@@ -3628,7 +3628,7 @@ export const references = [
         label: 'CLI',
         description: 'something about the reference',
         icon: '/docs/img/icons/cli-icon.svg',
-        url: '/reference/cli/start',
+        url: '/reference/cli/introduction',
       },
       {
         label: 'Management API',
@@ -3645,19 +3645,19 @@ export const references = [
         label: 'Auth server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/auth.svg',
-        url: '/reference/auth/start',
+        url: '/reference/self-hosting-auth/introduction',
       },
       {
         label: 'Storage server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/storage.svg',
-        url: '/reference/storage/start',
+        url: '/reference/self-hosting-storage/introduction',
       },
       {
         label: 'Realtime server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/realtime.svg',
-        url: '/reference/realtime/start',
+        url: '/reference/self-hosting-realtime/introduction',
       },
     ],
   },
