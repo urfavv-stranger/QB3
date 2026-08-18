@@ -25,9 +25,11 @@ import {
 } from 'ui-patterns/PageSection'
 
 import { IntegrationSectionIcon } from '../IntegrationsSettings'
+import { getConnectionTitle } from './AWSPrivateLink.utils'
 import { AWSPrivateLinkAccountItem } from './AWSPrivateLinkAccountItem'
 import { AWSPrivateLinkAttentionAdmonition } from './AWSPrivateLinkAttentionAdmonition'
 import { AWSPrivateLinkForm } from './AWSPrivateLinkForm'
+import { usePrivateLinkPreview } from './preview'
 import { ResourceList } from '@/components/ui/Resource/ResourceList'
 import { UpgradeToPro } from '@/components/ui/UpgradeToPro'
 import { useAWSAccountDeleteMutation } from '@/data/aws-accounts/aws-account-delete-mutation'
@@ -40,13 +42,18 @@ import { IS_PLATFORM } from '@/lib/constants'
 
 export const AWSPrivateLinkSection = () => {
   const { data: project } = useSelectedProjectQuery()
-  const { data: accounts } = useAWSAccountsQuery({ projectRef: project?.ref })
+  const preview = usePrivateLinkPreview()
+  const { data: liveAccounts } = useAWSAccountsQuery(
+    { projectRef: project?.ref },
+    { enabled: !preview.enabled }
+  )
+  const accounts = preview.enabled ? preview.accounts : liveAccounts
 
   const [selectedAccount, setSelectedAccount] = useState<AWSAccount>()
   const [showForm, setShowForm] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const { mutate: deleteAccount, isPending: isDeleting } = useAWSAccountDeleteMutation({
+  const { mutateAsync: deleteAccount, isPending: isDeleting } = useAWSAccountDeleteMutation({
     onSuccess: () => {
       toast.success('Connection will be deleted shortly')
       setShowDeleteModal(false)
@@ -56,7 +63,7 @@ export const AWSPrivateLinkSection = () => {
   })
 
   const { hasAccess: hasPrivateLinkAccess } = useCheckEntitlements('security.private_link')
-  const promptPlanUpgrade = IS_PLATFORM && !hasPrivateLinkAccess
+  const promptPlanUpgrade = IS_PLATFORM && !hasPrivateLinkAccess && !preview.skipUpgradeWall
 
   const onAddAccount = () => {
     setSelectedAccount(undefined)
@@ -68,25 +75,34 @@ export const AWSPrivateLinkSection = () => {
     setShowForm(true)
   }
 
-  const onConfirmDelete = () => {
-    if (selectedAccount && project) {
-      deleteAccount({
-        projectRef: project.ref,
-        awsAccountId: selectedAccount.aws_account_id,
-        databaseIdentifier:
-          selectedAccount.database_type === 'READ_REPLICA'
-            ? selectedAccount.database_identifier
-            : undefined,
-      })
-    }
+  const onConfirmDelete = async () => {
+    if (!selectedAccount || !project) return
+
+    await deleteAccount({
+      projectRef: project.ref,
+      awsAccountId: selectedAccount.aws_account_id,
+      databaseIdentifier:
+        selectedAccount.database_type === 'READ_REPLICA'
+          ? selectedAccount.database_identifier
+          : undefined,
+    })
   }
 
-  const deleteDatabaseCopy =
-    selectedAccount?.database_type === 'READ_REPLICA'
-      ? selectedAccount.database_identifier
-        ? `the read replica (ID: ${formatDatabaseID(selectedAccount.database_identifier)})`
-        : 'a read replica'
-      : 'the primary database'
+  let deleteDatabaseCopy = 'the primary database'
+  if (selectedAccount?.database_type === 'READ_REPLICA') {
+    deleteDatabaseCopy = selectedAccount.database_identifier
+      ? `the read replica (ID: ${formatDatabaseID(selectedAccount.database_identifier)})`
+      : 'the read replica (ID: Unknown identifier)'
+  }
+
+  const deleteConnectionTitle = selectedAccount
+    ? getConnectionTitle({
+        account_name: selectedAccount.account_name,
+        aws_account_id: selectedAccount.aws_account_id,
+      })
+    : ''
+  const showDeleteConnectionId =
+    !!selectedAccount && deleteConnectionTitle === selectedAccount.aws_account_id
 
   return (
     <>
@@ -161,8 +177,12 @@ export const AWSPrivateLinkSection = () => {
             <AlertDialogTitle>Delete connection</AlertDialogTitle>
             <AlertDialogDescription>
               This removes the PrivateLink connection for{' '}
-              <code className="text-code-inline">{selectedAccount?.aws_account_id}</code> on{' '}
-              {deleteDatabaseCopy}. Applications using this private path will lose access.
+              {showDeleteConnectionId ? (
+                <code className="text-code-inline">{deleteConnectionTitle}</code>
+              ) : (
+                deleteConnectionTitle
+              )}{' '}
+              on {deleteDatabaseCopy}. Applications using this private path will lose access.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -5,6 +5,7 @@ import {
   getConnectionsAttentionCopy,
   getConnectionStatusUi,
   getConnectionTitle,
+  isIamRoleArn,
   type PrivateLinkConnectionStatus,
 } from './AWSPrivateLink.utils'
 
@@ -33,11 +34,16 @@ describe('getConnectionTitle', () => {
       getConnectionTitle({
         account_name: 'Production VPC',
         aws_account_id: '123456789012',
+        partner: 'vercel',
       })
     ).toBe('Production VPC')
   })
 
-  it('falls back to the AWS account ID for an unnamed connection', () => {
+  it('falls back to Vercel when that partner has no nickname', () => {
+    expect(getConnectionTitle({ aws_account_id: '111122223333', partner: 'vercel' })).toBe('Vercel')
+  })
+
+  it('falls back to the AWS account ID for an unnamed AWS-direct connection', () => {
     expect(getConnectionTitle({ aws_account_id: '123456789012' })).toBe('123456789012')
   })
 
@@ -51,6 +57,18 @@ describe('getConnectionTitle', () => {
   })
 })
 
+describe('isIamRoleArn', () => {
+  it('accepts a role ARN', () => {
+    expect(isIamRoleArn('arn:aws:iam::111122223333:role/TenantConnector')).toBe(true)
+  })
+
+  it('rejects empty and non-role ARNs', () => {
+    expect(isIamRoleArn('')).toBe(false)
+    expect(isIamRoleArn('111122223333')).toBe(false)
+    expect(isIamRoleArn('arn:aws:iam::111122223333:user/admin')).toBe(false)
+  })
+})
+
 describe('getConnectionsAttentionCopy', () => {
   it('returns null when nothing needs attention', () => {
     expect(getConnectionsAttentionCopy({ waitingCount: 0, expiredCount: 0 })).toBeNull()
@@ -60,14 +78,15 @@ describe('getConnectionsAttentionCopy', () => {
     const copy = getConnectionsAttentionCopy({ waitingCount: 1, expiredCount: 0 })
     expect(copy?.type).toBe('warning')
     expect(copy?.title).toBe('Waiting for the AWS account owner')
-    expect(copy?.showAcceptLink).toBe(true)
+    expect(copy?.shouldShowAcceptLink).toBe(true)
   })
 
   it('uses destructive copy when only expired', () => {
     const copy = getConnectionsAttentionCopy({ waitingCount: 0, expiredCount: 2 })
     expect(copy?.type).toBe('destructive')
     expect(copy?.title).toBe('Connection requests expired')
-    expect(copy?.showAcceptLink).toBe(false)
+    expect(copy?.description).toBe('AWS can no longer accept the expired shares below.')
+    expect(copy?.shouldShowAcceptLink).toBe(false)
   })
 
   it('counts statuses from a list', () => {
