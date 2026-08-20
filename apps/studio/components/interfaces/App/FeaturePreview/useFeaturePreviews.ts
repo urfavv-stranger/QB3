@@ -35,6 +35,7 @@ export const useFeaturePreviews = (): FeaturePreview[] => {
   const jitDbAccessEnabled = useFlag('jitDbAccess')
   const isMarketplaceEnabled = useFlag('marketplaceIntegrations')
   const isDatabaseConnectionsEnabled = useFlag('topForPostgres')
+  const isStorageVersioningEnabled = useFlag('storageVersioningPrivateAlpha')
 
   const isSqlEditorManualSaveForced = useFlag('sqlEditorManualSaveForced')
 
@@ -137,6 +138,16 @@ export const useFeaturePreviews = (): FeaturePreview[] => {
         getRoute: (ref?: string) => `/project/${ref}/observability/connections`,
         bannerId: 'database-connections-banner',
       },
+      {
+        key: LOCAL_STORAGE_KEYS.UI_PREVIEW_STORAGE_VERSIONING,
+        name: 'Storage versioning',
+        discussionsUrl: undefined,
+        isNew: true,
+        isPlatformOnly: true,
+        isDefaultOptIn: true,
+        enabled: isStorageVersioningEnabled,
+        getRoute: (ref?: string) => `/project/${ref}/storage/files`,
+      },
     ]
 
     return previews.sort((a, b) => Number(b.isNew) - Number(a.isNew))
@@ -146,5 +157,6 @@ export const useFeaturePreviews = (): FeaturePreview[] => {
     jitDbAccessEnabled,
     isMarketplaceEnabled,
     isDatabaseConnectionsEnabled,
+    isStorageVersioningEnabled,
   ])
 }
