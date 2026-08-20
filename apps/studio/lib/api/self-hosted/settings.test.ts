@@ -10,6 +10,7 @@ vi.mock('@/lib/constants/api', () => ({
   PROJECT_ENDPOINT: 'localhost:8000',
   PROJECT_ENDPOINT_PROTOCOL: 'http',
   PROJECT_DB_HOST: 'localhost',
+  PROJECT_DB_HOST_DIRECT: 'localhost',
 }))
 
 describe('api/self-hosted/settings', () => {
@@ -47,6 +48,9 @@ describe('api/self-hosted/settings', () => {
 
       expect(settings.cloud_provider).toBe('AWS')
       expect(settings.db_host).toBe('localhost')
+      // Passed through from PROJECT_DB_HOST_DIRECT (resolution unit-tested in
+      // lib/constants/api.test.ts)
+      expect(settings.db_host_direct).toBe('localhost')
       expect(settings.db_name).toBe('postgres')
       expect(settings.db_port).toBe(5432)
       expect(settings.db_user).toBe('postgres')

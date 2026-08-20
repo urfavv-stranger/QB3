@@ -73,9 +73,12 @@ function useConnectionStringPooler(deploymentMode: DeploymentMode): ConnectionSt
   // every consumer that lists ConnectionStringPooler in their own deps).
   const connectionInfo = useMemo(() => {
     const DB_FIELDS = ['db_host', 'db_name', 'db_port', 'db_user', 'inserted_at']
+    // Only self-hosted advertises a separate direct-connection host; keep the
+    // platform connectionInfo shape untouched.
+    if (deploymentMode.isSelfHosted) DB_FIELDS.push('db_host_direct')
     const emptyState = { db_user: '', db_host: '', db_port: '', db_name: '' }
     return pluckObjectFields(settings || emptyState, DB_FIELDS)
-  }, [settings])
+  }, [settings, deploymentMode.isSelfHosted])
 
   const poolingConfigurationShared = supavisorConfig?.find((x) => x.database_type === 'PRIMARY')
   const poolingConfigurationDedicated = allowPgBouncerSelection ? pgbouncerConfig : undefined

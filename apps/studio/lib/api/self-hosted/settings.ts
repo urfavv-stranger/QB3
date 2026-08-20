@@ -2,7 +2,12 @@ import { components } from 'api-types'
 
 import { AUTH_JWT_SECRET, POSTGRES_PORT } from './constants'
 import { assertSelfHosted } from './util'
-import { PROJECT_DB_HOST, PROJECT_ENDPOINT, PROJECT_ENDPOINT_PROTOCOL } from '@/lib/constants/api'
+import {
+  PROJECT_DB_HOST,
+  PROJECT_DB_HOST_DIRECT,
+  PROJECT_ENDPOINT,
+  PROJECT_ENDPOINT_PROTOCOL,
+} from '@/lib/constants/api'
 
 type ProjectAppConfig = components['schemas']['ProjectSettingsResponse']['app_config'] & {
   protocol?: string
@@ -10,6 +15,10 @@ type ProjectAppConfig = components['schemas']['ProjectSettingsResponse']['app_co
 
 export type ProjectSettings = components['schemas']['ProjectSettingsResponse'] & {
   app_config?: ProjectAppConfig
+  // Host advertised in the direct connection string. Distinct from `db_host`
+  // (the public gateway host, where Supavisor is exposed): the operator can run
+  // Postgres elsewhere (managed PG, a separate container) via POSTGRES_HOST.
+  db_host_direct?: string
 }
 
 /**
@@ -31,6 +40,7 @@ export function getProjectSettings() {
     cloud_provider: 'AWS',
     db_dns_name: '-',
     db_host: PROJECT_DB_HOST,
+    db_host_direct: PROJECT_DB_HOST_DIRECT,
     db_ip_addr_config: 'legacy' as const,
     db_name: 'postgres',
     db_port: POSTGRES_PORT,
