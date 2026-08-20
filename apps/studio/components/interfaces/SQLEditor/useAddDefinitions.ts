@@ -1,4 +1,5 @@
 import { Monaco } from '@monaco-editor/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { LOCAL_STORAGE_KEYS } from 'common'
 import type { IDisposable } from 'monaco-editor'
 import { useEffect, useRef } from 'react'
@@ -6,6 +7,7 @@ import { useEffect, useRef } from 'react'
 import getPgsqlCompletionProvider from '@/components/ui/CodeEditor/Providers/PgSQLCompletionProvider'
 import getPgsqlSignatureHelpProvider from '@/components/ui/CodeEditor/Providers/PgSQLSignatureHelpProvider'
 import { useDatabaseFunctionsQuery } from '@/data/database-functions/database-functions-query'
+import { databaseKeys } from '@/data/database/keys'
 import { useKeywordsQuery } from '@/data/database/keywords-query'
 import { useSchemasQuery } from '@/data/database/schemas-query'
 import { useTableColumnsQuery } from '@/data/database/table-columns-query'
@@ -15,6 +17,31 @@ import { useSelectedProjectQuery } from '@/hooks/misc/useSelectedProject'
 import { formatSql } from '@/lib/formatSql'
 import { useSqlEditorV2StateSnapshot } from '@/state/sql-editor/sql-editor-state'
 
+/**
+ * Prevents double registration of Monaco providers (e.g registerCompletionItemProvider)
+ */
+const sharedRegistrations = new Map<string, { count: number; disposable?: IDisposable }>()
+
+export function acquireSharedRegistration(key: string, register: () => IDisposable) {
+  const existing = sharedRegistrations.get(key)
+  if (existing) {
+    existing.count += 1
+  } else {
+    sharedRegistrations.set(key, { count: 1, disposable: register() })
+  }
+
+  return () => {
+    const entry = sharedRegistrations.get(key)
+    if (!entry) return
+
+    entry.count -= 1
+    if (entry.count <= 0) {
+      entry.disposable?.dispose()
+      sharedRegistrations.delete(key)
+    }
+  }
+}
+
 export const useAddDefinitions = (
   id: string,
   monaco: Monaco | null,
@@ -22,6 +49,7 @@ export const useAddDefinitions = (
 ) => {
   const { data: project } = useSelectedProjectQuery()
   const snapV2 = useSqlEditorV2StateSnapshot()
+  const queryClient = useQueryClient()
 
   const [intellisenseEnabled] = useLocalStorageQuery(
     LOCAL_STORAGE_KEYS.SQL_EDITOR_INTELLISENSE,
@@ -77,12 +105,33 @@ export const useAddDefinitions = (
     pgInfoRef.current.schemas = filteredSchemas
     pgInfoRef.current.keywords = keywords
     pgInfoRef.current.functions = functions
+  } else if (!intellisenseEnabled) {
+    // Release this instance's hold on the (potentially huge, for large databases)
+    // tableColumns/functions arrays so they're actually eligible for GC — see the
+    // cache-eviction effect below for why `enabled: false` alone isn't enough.
+    pgInfoRef.current = null
   }
+
+  // Actively evict the cached tableColumns/functions data when intellisense is turned off
+  useEffect(() => {
+    if (intellisenseEnabled) return
+
+    queryClient.removeQueries({
+      queryKey: databaseKeys.tableColumns(project?.ref, undefined, undefined),
+      exact: true,
+    })
+    queryClient.removeQueries({
+      queryKey: databaseKeys.databaseFunctions(project?.ref),
+      exact: true,
+    })
+  }, [intellisenseEnabled, project?.ref, queryClient])
 
   //  Enable pgsql format
   useEffect(() => {
-    if (monaco) {
-      const formatProvider = monaco.languages.registerDocumentFormattingEditProvider('pgsql', {
+    if (!monaco || !enabled) return
+
+    return acquireSharedRegistration('pgsql-format', () =>
+      monaco.languages.registerDocumentFormattingEditProvider('pgsql', {
         async provideDocumentFormattingEdits(model) {
           const value = model.getValue()
           const formatted = formatSql(value)
@@ -90,31 +139,29 @@ export const useAddDefinitions = (
           return [{ range: model.getFullModelRange(), text: formatted }]
         },
       })
-      return () => formatProvider.dispose()
-    }
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monaco])
+  }, [monaco, enabled])
 
   // Register auto completion item provider for pgsql
   useEffect(() => {
-    let completeProvider: IDisposable | null = null
-    let signatureHelpProvider: IDisposable | null = null
+    if (!isPgInfoReady || !monaco) return
 
-    if (isPgInfoReady) {
-      if (monaco && isPgInfoReady) {
-        completeProvider = monaco.languages.registerCompletionItemProvider(
-          'pgsql',
-          getPgsqlCompletionProvider(monaco, pgInfoRef)
-        )
-        signatureHelpProvider = monaco.languages.registerSignatureHelpProvider(
-          'pgsql',
-          getPgsqlSignatureHelpProvider(monaco, pgInfoRef)
-        )
+    return acquireSharedRegistration('pgsql-completion', () => {
+      const completeProvider = monaco.languages.registerCompletionItemProvider(
+        'pgsql',
+        getPgsqlCompletionProvider(monaco, pgInfoRef)
+      )
+      const signatureHelpProvider = monaco.languages.registerSignatureHelpProvider(
+        'pgsql',
+        getPgsqlSignatureHelpProvider(monaco, pgInfoRef)
+      )
+      return {
+        dispose: () => {
+          completeProvider.dispose()
+          signatureHelpProvider.dispose()
+        },
       }
-    }
-    return () => {
-      completeProvider?.dispose()
-      signatureHelpProvider?.dispose()
-    }
+    })
   }, [isPgInfoReady, monaco])
 }
