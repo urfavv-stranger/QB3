@@ -3316,34 +3316,34 @@ export const reference = {
       items: [
         {
           name: 'supabase-js',
-          url: '/reference/javascript/start',
+          url: '/reference/javascript/introduction',
           level: 'reference_javascript',
           icon: '/img/icons/menu/reference-javascript' as `/${string}`,
         },
         {
           name: 'supabase-dart',
-          url: '/reference/dart/start',
+          url: '/reference/dart/introduction',
           level: 'reference_dart',
           icon: '/img/icons/menu/reference-dart' as `/${string}`,
           enabled: sdkDartEnabled,
         },
         {
           name: 'supabase-csharp',
-          url: '/reference/csharp/start',
+          url: '/reference/csharp/introduction',
           level: 'reference_csharp',
           icon: '/img/icons/menu/reference-csharp' as `/${string}`,
           enabled: sdkCsharpEnabled,
         },
         {
           name: 'supbase-python',
-          url: '/reference/python/start',
+          url: '/reference/python/introduction',
           level: 'reference_python',
           icon: '/img/icons/menu/reference-python' as `/${string}`,
           enabled: sdkPythonEnabled,
         },
         {
           name: 'supbase-swift',
-          url: '/reference/swift/start',
+          url: '/reference/swift/introduction',
           level: 'reference_swift',
           items: [],
           icon: '/img/icons/menu/reference-swift' as `/${string}`,
@@ -3351,7 +3351,7 @@ export const reference = {
         },
         {
           name: 'supabase-kt',
-          url: '/reference/kotlin/start',
+          url: '/reference/kotlin/introduction',
           level: 'reference_kotlin',
           items: [],
           icon: '/img/icons/menu/reference-kotlin' as `/${string}`,
@@ -3364,7 +3364,7 @@ export const reference = {
       items: [
         {
           name: 'Supabase CLI',
-          url: '/reference/cli/start',
+          url: '/reference/cli/introduction',
           icon: '/img/icons/menu/reference-cli' as `/${string}`,
         },
         {
@@ -3582,13 +3582,13 @@ export const references = [
         versions: ['v2', 'v1'],
         description: 'something about the reference',
         icon: '/docs/img/icons/javascript-icon.svg',
-        url: '/reference/javascript/start',
+        url: '/reference/javascript/introduction',
       },
       {
         label: 'supabase-py',
         description: 'something about the reference',
         icon: '/docs/img/icons/python-icon.svg',
-        url: '/reference/python/start',
+        url: '/reference/python/introduction',
         enabled: sdkPythonEnabled,
       },
       {
@@ -3596,7 +3596,7 @@ export const references = [
         versions: ['v1', 'v0'],
         description: 'something about the reference',
         icon: '/docs/img/icons/dart-icon.svg',
-        url: '/reference/dart/start',
+        url: '/reference/dart/introduction',
         enabled: sdkDartEnabled,
       },
       {
@@ -3604,7 +3604,7 @@ export const references = [
         versions: ['v0'],
         description: 'something about the reference',
         icon: '/docs/img/icons/c-sharp-icon.svg',
-        url: '/reference/csharp/start',
+        url: '/reference/csharp/introduction',
         enabled: sdkCsharpEnabled,
       },
       {
@@ -3612,7 +3612,7 @@ export const references = [
         versions: ['v2', 'v1'],
         description: 'something about the reference',
         icon: '/docs/img/icons/swift-icon.svg',
-        url: '/reference/swift/start',
+        url: '/reference/swift/introduction',
         enabled: sdkSwiftEnabled,
       },
       {
@@ -3620,7 +3620,7 @@ export const references = [
         versions: ['v3', 'v2', 'v1'],
         description: 'something about the reference',
         icon: '/docs/img/icons/kotlin-icon.svg',
-        url: '/reference/kotlin/start',
+        url: '/reference/kotlin/introduction',
         enabled: sdkKotlinEnabled,
       },
     ],
@@ -3632,7 +3632,7 @@ export const references = [
         label: 'CLI',
         description: 'something about the reference',
         icon: '/docs/img/icons/cli-icon.svg',
-        url: '/reference/cli/start',
+        url: '/reference/cli/introduction',
       },
       {
         label: 'Management API',
@@ -3649,19 +3649,19 @@ export const references = [
         label: 'Auth server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/auth.svg',
-        url: '/reference/auth/start',
+        url: '/reference/self-hosting-auth/introduction',
       },
       {
         label: 'Storage server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/storage.svg',
-        url: '/reference/storage/start',
+        url: '/reference/self-hosting-storage/introduction',
       },
       {
         label: 'Realtime server',
         description: 'something about the reference',
         icon: '/docs/img/icons/menu/realtime.svg',
-        url: '/reference/realtime/start',
+        url: '/reference/self-hosting-realtime/introduction',
       },
     ],
   },
