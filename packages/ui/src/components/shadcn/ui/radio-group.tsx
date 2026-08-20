@@ -44,10 +44,13 @@ interface RadioGroupLargeItemProps {
 const RadioGroupLargeItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   RadioGroupLargeItemProps & React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(({ image, label, showIndicator = true, ...props }, ref) => {
+>(({ id: idProp, image, label, showIndicator = true, ...props }, ref) => {
+  const generatedId = React.useId()
+  const id = idProp || generatedId
   return (
     <RadioGroupPrimitive.Item
       ref={ref}
+      id={id}
       {...props}
       className={cn(
         'flex flex-col gap-2',
@@ -95,7 +98,7 @@ const RadioGroupLargeItem = React.forwardRef<
         )}
 
         <label
-          htmlFor={props.value}
+          htmlFor={id}
           className={cn(
             'text-xs transition-colors text-left',
             'text-light',
