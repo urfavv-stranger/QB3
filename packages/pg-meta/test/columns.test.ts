@@ -965,3 +965,49 @@ withTestDatabase(
     expect(column?.format_schema).toBe('pg_catalog')
   }
 )
+
+withTestDatabase(
+  'listInaccessible reports the columns that privilege filtering hides',
+  async ({ dbName, executeQuery }) => {
+    // Roles are cluster-wide while each test gets its own database, so derive a
+    // unique name to keep parallel runs from colliding.
+    const role = `limited_${dbName}`
+
+    await executeQuery(`
+    create table public.documents (id int primary key, title text, secret text);
+    create role ${role};
+    grant usage on schema public to ${role};
+    grant select (id, title) on public.documents to ${role};
+  `)
+
+    const { sql, zod } = pgMeta.columns.listInaccessible({
+      schema: 'public',
+      table: 'documents',
+    })
+
+    // The role outlives the test database, so drop it even if an assertion throws.
+    try {
+      // The owner can see everything, so nothing is being hidden from it.
+      expect(zod.parse(await executeQuery(sql))).toEqual([])
+
+      await executeQuery(`set role ${role};`)
+
+      const inaccessible = zod.parse(await executeQuery(sql))
+      const { sql: listSql, zod: listZod } = pgMeta.columns.list()
+      const listed = listZod
+        .parse(await executeQuery(listSql))
+        .filter(({ table }) => table === 'documents')
+
+      expect(inaccessible.map(({ name }) => name)).toEqual(['secret'])
+      // The two are complements: what `list` drops is exactly what this reports.
+      expect(listed.map(({ name }) => name)).toEqual(['id', 'title'])
+    } finally {
+      await executeQuery(`
+      reset role;
+      revoke all on public.documents from ${role};
+      revoke usage on schema public from ${role};
+      drop role ${role};
+    `)
+    }
+  }
+)
