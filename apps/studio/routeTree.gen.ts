@@ -107,6 +107,7 @@ import { Route as ProjectRefSettingsIntegrationsRouteImport } from './routes/pro
 import { Route as ProjectRefSettingsInfrastructureRouteImport } from './routes/project/$ref/settings/infrastructure'
 import { Route as ProjectRefSettingsGeneralRouteImport } from './routes/project/$ref/settings/general'
 import { Route as ProjectRefSettingsDashboardRouteImport } from './routes/project/$ref/settings/dashboard'
+import { Route as ProjectRefSettingsConfigurationDriftRouteImport } from './routes/project/$ref/settings/configuration-drift'
 import { Route as ProjectRefSettingsApiKeysRouteImport } from './routes/project/$ref/settings/api-keys'
 import { Route as ProjectRefSettingsApiRouteImport } from './routes/project/$ref/settings/api'
 import { Route as ProjectRefSettingsAddonsRouteImport } from './routes/project/$ref/settings/addons'
@@ -827,6 +828,12 @@ const ProjectRefSettingsDashboardRoute =
   ProjectRefSettingsDashboardRouteImport.update({
     id: '/dashboard',
     path: '/dashboard',
+    getParentRoute: () => ProjectRefSettingsRoute,
+  } as any)
+const ProjectRefSettingsConfigurationDriftRoute =
+  ProjectRefSettingsConfigurationDriftRouteImport.update({
+    id: '/configuration-drift',
+    path: '/configuration-drift',
     getParentRoute: () => ProjectRefSettingsRoute,
   } as any)
 const ProjectRefSettingsApiKeysRoute =
@@ -2234,6 +2241,7 @@ export interface FileRoutesByFullPath {
   '/project/$ref/settings/addons': typeof ProjectRefSettingsAddonsRoute
   '/project/$ref/settings/api': typeof ProjectRefSettingsApiRoute
   '/project/$ref/settings/api-keys': typeof ProjectRefSettingsApiKeysRouteWithChildren
+  '/project/$ref/settings/configuration-drift': typeof ProjectRefSettingsConfigurationDriftRoute
   '/project/$ref/settings/dashboard': typeof ProjectRefSettingsDashboardRoute
   '/project/$ref/settings/general': typeof ProjectRefSettingsGeneralRoute
   '/project/$ref/settings/infrastructure': typeof ProjectRefSettingsInfrastructureRoute
@@ -2533,6 +2541,7 @@ export interface FileRoutesByTo {
   '/project/$ref/realtime/settings': typeof ProjectRefRealtimeSettingsRoute
   '/project/$ref/settings/addons': typeof ProjectRefSettingsAddonsRoute
   '/project/$ref/settings/api': typeof ProjectRefSettingsApiRoute
+  '/project/$ref/settings/configuration-drift': typeof ProjectRefSettingsConfigurationDriftRoute
   '/project/$ref/settings/dashboard': typeof ProjectRefSettingsDashboardRoute
   '/project/$ref/settings/general': typeof ProjectRefSettingsGeneralRoute
   '/project/$ref/settings/infrastructure': typeof ProjectRefSettingsInfrastructureRoute
@@ -2848,6 +2857,7 @@ export interface FileRoutesById {
   '/project/$ref/settings/addons': typeof ProjectRefSettingsAddonsRoute
   '/project/$ref/settings/api': typeof ProjectRefSettingsApiRoute
   '/project/$ref/settings/api-keys': typeof ProjectRefSettingsApiKeysRouteWithChildren
+  '/project/$ref/settings/configuration-drift': typeof ProjectRefSettingsConfigurationDriftRoute
   '/project/$ref/settings/dashboard': typeof ProjectRefSettingsDashboardRoute
   '/project/$ref/settings/general': typeof ProjectRefSettingsGeneralRoute
   '/project/$ref/settings/infrastructure': typeof ProjectRefSettingsInfrastructureRoute
@@ -3162,6 +3172,7 @@ export interface FileRouteTypes {
     | '/project/$ref/settings/addons'
     | '/project/$ref/settings/api'
     | '/project/$ref/settings/api-keys'
+    | '/project/$ref/settings/configuration-drift'
     | '/project/$ref/settings/dashboard'
     | '/project/$ref/settings/general'
     | '/project/$ref/settings/infrastructure'
@@ -3461,6 +3472,7 @@ export interface FileRouteTypes {
     | '/project/$ref/realtime/settings'
     | '/project/$ref/settings/addons'
     | '/project/$ref/settings/api'
+    | '/project/$ref/settings/configuration-drift'
     | '/project/$ref/settings/dashboard'
     | '/project/$ref/settings/general'
     | '/project/$ref/settings/infrastructure'
@@ -3775,6 +3787,7 @@ export interface FileRouteTypes {
     | '/project/$ref/settings/addons'
     | '/project/$ref/settings/api'
     | '/project/$ref/settings/api-keys'
+    | '/project/$ref/settings/configuration-drift'
     | '/project/$ref/settings/dashboard'
     | '/project/$ref/settings/general'
     | '/project/$ref/settings/infrastructure'
@@ -4731,6 +4744,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/project/$ref/settings/dashboard'
       preLoaderRoute: typeof ProjectRefSettingsDashboardRouteImport
+      parentRoute: typeof ProjectRefSettingsRoute
+    }
+    '/project/$ref/settings/configuration-drift': {
+      id: '/project/$ref/settings/configuration-drift'
+      path: '/configuration-drift'
+      fullPath: '/project/$ref/settings/configuration-drift'
+      preLoaderRoute: typeof ProjectRefSettingsConfigurationDriftRouteImport
       parentRoute: typeof ProjectRefSettingsRoute
     }
     '/project/$ref/settings/api-keys': {
@@ -6764,6 +6784,7 @@ interface ProjectRefSettingsRouteChildren {
   ProjectRefSettingsAddonsRoute: typeof ProjectRefSettingsAddonsRoute
   ProjectRefSettingsApiRoute: typeof ProjectRefSettingsApiRoute
   ProjectRefSettingsApiKeysRoute: typeof ProjectRefSettingsApiKeysRouteWithChildren
+  ProjectRefSettingsConfigurationDriftRoute: typeof ProjectRefSettingsConfigurationDriftRoute
   ProjectRefSettingsDashboardRoute: typeof ProjectRefSettingsDashboardRoute
   ProjectRefSettingsGeneralRoute: typeof ProjectRefSettingsGeneralRoute
   ProjectRefSettingsInfrastructureRoute: typeof ProjectRefSettingsInfrastructureRoute
@@ -6780,6 +6801,8 @@ const ProjectRefSettingsRouteChildren: ProjectRefSettingsRouteChildren = {
   ProjectRefSettingsAddonsRoute: ProjectRefSettingsAddonsRoute,
   ProjectRefSettingsApiRoute: ProjectRefSettingsApiRoute,
   ProjectRefSettingsApiKeysRoute: ProjectRefSettingsApiKeysRouteWithChildren,
+  ProjectRefSettingsConfigurationDriftRoute:
+    ProjectRefSettingsConfigurationDriftRoute,
   ProjectRefSettingsDashboardRoute: ProjectRefSettingsDashboardRoute,
   ProjectRefSettingsGeneralRoute: ProjectRefSettingsGeneralRoute,
   ProjectRefSettingsInfrastructureRoute: ProjectRefSettingsInfrastructureRoute,
