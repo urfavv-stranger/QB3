@@ -121,6 +121,50 @@ describe('save mechanism — saveSnippet', () => {
     expect(t.invalidate).toHaveBeenCalledWith('ref')
   })
 
+  it('still invalidates when an invalidating save is coalesced with a later non-invalidating one', async () => {
+    const t = setup({ snippets: { 'snippet-1': makeStateSnippet({ status: 'saved' }) } })
+
+    // A rename / favorite / AI-title save needs the lists refreshed...
+    t.mechanism.saveSnippet({ id: 'snippet-1', projectRef: 'ref', shouldInvalidate: true })
+    // ...and a keystroke lands inside the debounce window, which does not.
+    vi.advanceTimersByTime(200)
+    t.mechanism.saveSnippet({ id: 'snippet-1', projectRef: 'ref', shouldInvalidate: false })
+
+    await vi.runAllTimersAsync()
+
+    expect(t.upsertContent).toHaveBeenCalledTimes(1)
+    expect(t.invalidate).toHaveBeenCalledWith('ref')
+  })
+
+  it('does not let an in-flight non-invalidating save clear an obligation queued after it started', async () => {
+    const t = setup({ snippets: { 'snippet-1': makeStateSnippet({ status: 'saved' }) } })
+    let finishFirstUpsert: () => void = () => {}
+    t.upsertContent.mockImplementationOnce(
+      () =>
+        new Promise<null>((resolve) => {
+          finishFirstUpsert = () => resolve(null)
+        })
+    )
+
+    // A keystroke save starts and blocks on the network.
+    t.mechanism.saveSnippet({ id: 'snippet-1', projectRef: 'ref', shouldInvalidate: false })
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(t.upsertContent).toHaveBeenCalledTimes(1)
+
+    // A rename lands while that save is still in flight, so an invalidation is owed.
+    t.mechanism.saveSnippet({ id: 'snippet-1', projectRef: 'ref', shouldInvalidate: true })
+
+    // The in-flight save completes without having invalidated anything.
+    finishFirstUpsert()
+    await vi.advanceTimersByTimeAsync(0)
+
+    // A further keystroke must not be able to drop the rename's invalidation.
+    t.mechanism.saveSnippet({ id: 'snippet-1', projectRef: 'ref', shouldInvalidate: false })
+    await vi.runAllTimersAsync()
+
+    expect(t.invalidate).toHaveBeenCalledWith('ref')
+  })
+
   it('transitions to save_failed when the upsert rejects', async () => {
     const t = setup({ snippets: { 'snippet-1': makeStateSnippet({ status: 'saved' }) } })
     t.upsertContent.mockRejectedValueOnce(new Error('network'))
