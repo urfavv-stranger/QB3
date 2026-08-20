@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Terminal } from 'lucide-react'
+import { PermissionAction } from '@supabase/shared-types/out/constants'
+import { ChevronLeft, ChevronRight, Plus, Terminal } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
@@ -27,11 +28,13 @@ import type { Worker, WorkerAccess, WorkerBuildState } from './Workers.types'
 import { filterWorkers, formatResources, getPage } from './Workers.utils'
 import { WorkerStatePill } from './WorkerStatePill'
 import { ButtonTooltip } from '@/components/ui/ButtonTooltip'
+import { useAsyncCheckPermissions } from '@/hooks/misc/useCheckPermissions'
 
 interface WorkersListProps {
   projectRef: string
   workers: Worker[]
   onDeploy: () => void
+  onCreate: () => void
 }
 
 const STATE_FILTERS: { value: WorkerBuildState | 'all'; label: string }[] = [
@@ -55,8 +58,9 @@ const parseStateFilter = (value: string): WorkerBuildState | 'all' =>
 const parseAccessFilter = (value: string): WorkerAccess | 'all' =>
   ACCESS_FILTERS.find((option) => option.value === value)?.value ?? 'all'
 
-export const WorkersList = ({ projectRef, workers, onDeploy }: WorkersListProps) => {
+export const WorkersList = ({ projectRef, workers, onDeploy, onCreate }: WorkersListProps) => {
   const router = useRouter()
+  const { can: canDeployWorkers } = useAsyncCheckPermissions(PermissionAction.FUNCTIONS_WRITE, '*')
   const [search, setSearch] = useState('')
   const [stateFilter, setStateFilter] = useState<WorkerBuildState | 'all'>('all')
   const [accessFilter, setAccessFilter] = useState<WorkerAccess | 'all'>('all')
@@ -127,9 +131,25 @@ export const WorkersList = ({ projectRef, workers, onDeploy }: WorkersListProps)
           <span className="text-sm text-foreground-lighter">
             {filtered.length} worker{filtered.length === 1 ? '' : 's'}
           </span>
-          <Button variant="primary" icon={<Terminal />} onClick={onDeploy}>
-            Deploy a worker
+          <Button variant="default" icon={<Terminal />} onClick={onDeploy}>
+            Deploy with CLI
           </Button>
+          <ButtonTooltip
+            variant="primary"
+            icon={<Plus />}
+            disabled={!canDeployWorkers}
+            onClick={onCreate}
+            tooltip={{
+              content: {
+                side: 'bottom',
+                text: canDeployWorkers
+                  ? undefined
+                  : 'You need additional permissions to deploy workers',
+              },
+            }}
+          >
+            New worker
+          </ButtonTooltip>
         </div>
       </div>
 
