@@ -31,6 +31,8 @@ import { Message } from './Message'
 import { Markdown } from '@/components/interfaces/Markdown'
 import { useCheckOpenAIKeyQuery } from '@/data/ai/check-api-key-query'
 import { useRateMessageMutation } from '@/data/ai/rate-message-mutation'
+import { isValidConnString } from '@/data/fetchers'
+import { useProjectDetailQuery } from '@/data/projects/project-detail-query'
 import { useTablesQuery } from '@/data/tables/tables-query'
 import { useCheckEntitlements } from '@/hooks/misc/useCheckEntitlements'
 import { useLocalStorageQuery } from '@/hooks/misc/useLocalStorage'
@@ -101,6 +103,7 @@ export const AssistantChat = ({
   const snap = useAiAssistantStateSnapshot()
   const state = useAiAssistantState()
   const currentChat = snap.chats[chatId]
+  const supportMetadata = currentChat?.supportMetadata
 
   useShortcut(SHORTCUT_IDS.AI_ASSISTANT_CANCEL_EDIT, () => cancelEdit(), {
     enabled: shortcutsEnabled,
@@ -168,14 +171,55 @@ export const AssistantChat = ({
   const currentTable = tables?.find((t) => t.id.toString() === entityId)
   const currentSchema = searchParams?.get('schema') ?? 'public'
 
-  // Update context in state
+  // on org-level pages, where there's no project in the URL,
+  // resolve it fresh from the chat's own projectRef instead.
+  const isOrgViewSupportChat = !project?.ref && !!supportMetadata?.projectRef
+  const {
+    data: supportChatProjectDetail,
+    isError: isSupportChatProjectError,
+    refetch: refetchSupportChatProjectDetail,
+  } = useProjectDetailQuery({ ref: supportMetadata?.projectRef }, { enabled: isOrgViewSupportChat })
+  // Mirrors the readiness check in SupportAssistantSuccessCardContent — a project still
+  // coming up, or with a connection string that isn't valid yet, isn't ready to send to.
+  const isSupportChatProjectReady =
+    !!supportChatProjectDetail &&
+    supportChatProjectDetail.status !== 'COMING_UP' &&
+    supportChatProjectDetail.status !== 'UNKNOWN' &&
+    isValidConnString(supportChatProjectDetail.connectionString)
+  const isResolvingSupportChatConnectionString = isOrgViewSupportChat && !isSupportChatProjectReady
+
+  // Update context in state. On org-level pages there's no project in the URL, so
+  // fall back to the open chat's own support metadata (see
+  // SupportAssistantSuccessCardContent) rather than clobbering it back to undefined —
+  // this also restores the right context after switching between support chats.
   useEffect(() => {
+    if (isOrgViewSupportChat && supportMetadata) {
+      // Wait for a ready project rather than setting an empty/unready connection string
+      if (!isSupportChatProjectReady) return
+
+      state.setContext({
+        projectRef: supportMetadata.projectRef,
+        orgSlug: supportMetadata.organizationSlug,
+        connectionString: supportChatProjectDetail.connectionString ?? undefined,
+      })
+      return
+    }
+
     state.setContext({
       projectRef: project?.ref,
       orgSlug: selectedOrganization?.slug,
       connectionString: project?.connectionString ?? '',
     })
-  }, [project?.ref, project?.connectionString, selectedOrganization?.slug, state])
+  }, [
+    project?.ref,
+    project?.connectionString,
+    selectedOrganization?.slug,
+    state,
+    isOrgViewSupportChat,
+    isSupportChatProjectReady,
+    supportMetadata,
+    supportChatProjectDetail?.connectionString,
+  ])
 
   const track = useTrack()
 
@@ -203,12 +247,15 @@ export const AssistantChat = ({
 
   const isChatLoading = chatStatus === 'submitted' || chatStatus === 'streaming'
   const hasPendingApproval = hasPendingToolApproval(chatMessages)
-  const supportMetadata = currentChat?.supportMetadata
   const isSupportChat = !!supportMetadata?.isSupportChat
   const isSupportChatClosed = isSupportChat && supportMetadata.lifecycleStatus !== 'bot_active'
   const supportConversationId = supportMetadata?.frontConversationId
   const isChatInputDisabled =
-    !isApiKeySet || disablePrompts || isLoadingOrganization || isSupportChatClosed
+    !isApiKeySet ||
+    disablePrompts ||
+    isLoadingOrganization ||
+    isSupportChatClosed ||
+    isResolvingSupportChatConnectionString
 
   const branchedFrom = currentChat?.branchedFrom
   const branchedConversation = branchedFrom ? snap.chats[branchedFrom.chatId] : undefined
@@ -638,6 +685,24 @@ export const AssistantChat = ({
               type="default"
               title="Assistant has been temporarily disabled"
               description="We're currently looking into getting it back online"
+            />
+          )}
+
+          {isOrgViewSupportChat && isSupportChatProjectError && (
+            <Admonition
+              type="warning"
+              layout="horizontal"
+              title="Couldn't load this project's details"
+              description="The assistant needs this to respond to your support request."
+              actions={
+                <Button
+                  variant="default"
+                  size="tiny"
+                  onClick={() => refetchSupportChatProjectDetail()}
+                >
+                  Try again
+                </Button>
+              }
             />
           )}
 

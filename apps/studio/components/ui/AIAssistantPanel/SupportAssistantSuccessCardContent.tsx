@@ -2,10 +2,11 @@ import type { UIMessage as MessageType } from '@ai-sdk/react'
 import { ArrowUpRight } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import type { JSX } from 'react'
+import type { JSX, MouseEvent } from 'react'
 import type { StreamdownProps } from 'streamdown'
 import {
   AiIconAnimation,
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -19,6 +20,8 @@ import { buildSupportAssistantPrompt } from '@/components/interfaces/Support/Sup
 import type { SubmittedSupportRequest } from '@/components/interfaces/Support/SupportForm.state'
 import { NO_PROJECT_MARKER } from '@/components/interfaces/Support/SupportForm.utils'
 import { SIDEBAR_KEYS } from '@/components/layouts/ProjectLayout/LayoutSidebar/LayoutSidebarProvider'
+import { isValidConnString } from '@/data/fetchers'
+import { useProjectDetailQuery } from '@/data/projects/project-detail-query'
 import { useTrack } from '@/lib/telemetry/track'
 import {
   useAiAssistantState,
@@ -60,9 +63,35 @@ export function SupportAssistantSuccessCardContent({
 
   const assistantPrompt = useMemo(() => buildSupportAssistantPrompt(request), [request])
 
+  // The org-view support form resolves projectRef itself (defaulting to the
+  // first project in the org) rather than reading it from the URL, so the
+  // assistant's context needs the connection string fetched explicitly too.
+  const {
+    data: projectDetail,
+    isError: isProjectDetailError,
+    refetch: refetchProjectDetail,
+  } = useProjectDetailQuery({ ref: request.projectRef }, { enabled: hasAssistantContext })
+
+  // Mirrors the readiness check useProjectDetailQuery itself polls on: a project
+  // still coming up, or one without a usable connection string yet, isn't ready
+  // to receive requests, even though the query already returned some data.
+  const isProjectReady =
+    !!projectDetail &&
+    projectDetail.status !== 'COMING_UP' &&
+    projectDetail.status !== 'UNKNOWN' &&
+    isValidConnString(projectDetail.connectionString)
+  const connectionString = projectDetail?.connectionString ?? undefined
+
   useEffect(() => {
     if (!hasAssistantContext) return
+    if (!isProjectReady) return
     if (createdChatIdRef.current) return
+
+    aiAssistantState.setContext({
+      projectRef: request.projectRef,
+      orgSlug: request.organizationSlug,
+      connectionString,
+    })
 
     const newChatId = aiAssistant.newChat({
       name: 'Support request',
@@ -71,7 +100,9 @@ export function SupportAssistantSuccessCardContent({
 
     createdChatIdRef.current = newChatId
     setChatId(newChatId)
-  }, [aiAssistant, assistantPrompt, hasAssistantContext])
+    // aiAssistantState is a stable context value (same identity across renders)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiAssistant, assistantPrompt, connectionString, hasAssistantContext, isProjectReady, request])
 
   const handleOpenAssistant = () => {
     track(
@@ -122,20 +153,30 @@ export function SupportAssistantSuccessCardContent({
 
   if (!hasAssistantContext) return null
 
+  // Before the chat exists (still loading, or failed) there's nothing for the card to
+  // open — disable its click/keyboard handlers so only "Try again" (while erroring) is
+  // interactive, and clicking mid-load can't open the sidebar with no chat prepared.
+  const isInteractive = !!chat
+
   return (
     <Card
-      role="button"
-      tabIndex={0}
-      aria-label="Open assistant response"
-      onClick={handleOpenAssistant}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          handleOpenAssistant()
-        }
-      }}
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      aria-label={isInteractive ? 'Open assistant response' : undefined}
+      onClick={isInteractive ? handleOpenAssistant : undefined}
+      onKeyDown={
+        isInteractive
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                handleOpenAssistant()
+              }
+            }
+          : undefined
+      }
       className={cn(
-        'group cursor-pointer bg-muted/50 transition-colors hover:bg-muted/50 focus-ring',
+        'group bg-muted/50 transition-colors',
+        isInteractive && 'cursor-pointer hover:bg-muted/50 focus-ring',
         className
       )}
     >
@@ -156,14 +197,34 @@ export function SupportAssistantSuccessCardContent({
           aria-hidden
         />
       </CardHeader>
-      {chat ? (
-        <SupportAssistantResponsePreview chat={chat as SupportAssistantPreviewChat} />
-      ) : (
-        <CardContent>
-          <SupportAssistantResponseLoadingSkeleton />
-        </CardContent>
-      )}
+      <SupportAssistantCardBody
+        chat={chat as SupportAssistantPreviewChat | undefined}
+        isError={isProjectDetailError}
+        onRetry={(event) => {
+          event.stopPropagation()
+          refetchProjectDetail()
+        }}
+      />
     </Card>
+  )
+}
+
+function SupportAssistantCardBody({
+  chat,
+  isError,
+  onRetry,
+}: {
+  chat: SupportAssistantPreviewChat | undefined
+  isError: boolean
+  onRetry: (event: MouseEvent<HTMLButtonElement>) => void
+}) {
+  if (chat) return <SupportAssistantResponsePreview chat={chat} />
+  if (isError) return <SupportAssistantResponseErrorState onRetry={onRetry} />
+
+  return (
+    <CardContent>
+      <SupportAssistantResponseLoadingSkeleton />
+    </CardContent>
   )
 }
 
@@ -239,5 +300,20 @@ function SupportAssistantResponseLoadingSkeleton() {
       <Skeleton className="h-4 w-[92%]" />
       <Skeleton className="h-4 w-[68%]" />
     </div>
+  )
+}
+
+function SupportAssistantResponseErrorState({
+  onRetry,
+}: {
+  onRetry: (event: MouseEvent<HTMLButtonElement>) => void
+}) {
+  return (
+    <CardContent className="flex items-center justify-between gap-4">
+      <span className="text-sm text-foreground-light">Couldn't load the assistant response.</span>
+      <Button variant="default" size="tiny" onClick={onRetry}>
+        Try again
+      </Button>
+    </CardContent>
   )
 }
