@@ -1,6 +1,8 @@
 import { parseAsInteger, parseAsStringEnum, useQueryState } from 'nuqs'
 import {
-  Badge,
+  cn,
+  RadioGroupStacked,
+  RadioGroupStackedItem,
   Select,
   SelectContent,
   SelectGroup,
@@ -21,7 +23,6 @@ import {
   useIsETLSnowflakePrivateAlpha,
 } from '../useIsETLPrivateAlpha'
 import { DestinationType } from './DestinationPanel.types'
-import { InlineLink } from '@/components/ui/InlineLink'
 import { useIsFeatureEnabled } from '@/hooks/misc/useIsFeatureEnabled'
 
 interface DestinationTypeOption {
@@ -33,11 +34,21 @@ interface DestinationTypeOption {
 }
 
 interface DestinationTypeGroup {
-  label: string
+  label: string | null
   options: DestinationTypeOption[]
 }
 
-export const DestinationTypeSelection = () => {
+interface DestinationTypeSelectionProps {
+  variant?: 'select' | 'radio'
+  hideReadReplica?: boolean
+  className?: string
+}
+
+export const DestinationTypeSelection = ({
+  variant = 'select',
+  hideReadReplica = false,
+  className,
+}: DestinationTypeSelectionProps) => {
   const etlEnableBigQuery = useIsETLBigQueryPrivateAlpha()
   const etlEnableIceberg = useIsETLIcebergPrivateAlpha()
   const etlEnableDucklake = useIsETLDucklakePrivateAlpha()
@@ -65,39 +76,18 @@ export const DestinationTypeSelection = () => {
     parseAsInteger.withOptions({ history: 'push', clearOnDefault: true })
   )
   const editMode = edit !== null
+  const isTypeLocked = editMode
 
   const { type: existingDestinationType } = useDestinationInformation({ id: edit })
   const destinationType = existingDestinationType ?? urlDestinationType
 
-  // In edit mode the type is locked, so only surface the option that matches the
-  // destination being edited. Otherwise show every type the project has access to.
   const isOptionVisible = (value: DestinationType, hasAccess: boolean) =>
     editMode ? destinationType === value : hasAccess
 
   const groups: DestinationTypeGroup[] = [
     {
-      label: 'Other',
+      label: 'Public Alpha',
       options: [
-        {
-          value: 'Read Replica',
-          label: 'Read Replica',
-          description:
-            'Deploy a read-only database in another region for lower latency and workload isolation',
-          stage: null,
-          enabled: isOptionVisible('Read Replica', infrastructureReadReplicas),
-        },
-      ],
-    },
-    {
-      label: 'Pipelines',
-      options: [
-        {
-          value: 'Analytics Bucket',
-          label: 'Analytics Bucket',
-          description: 'Write Apache Iceberg tables to Supabase Storage for analytics workflows',
-          stage: 'Deprecated',
-          enabled: isOptionVisible('Analytics Bucket', etlEnableIceberg),
-        },
         {
           value: 'BigQuery',
           label: 'BigQuery',
@@ -105,6 +95,11 @@ export const DestinationTypeSelection = () => {
           stage: 'Public Alpha',
           enabled: isOptionVisible('BigQuery', etlEnableBigQuery),
         },
+      ],
+    },
+    {
+      label: 'Early Access',
+      options: [
         {
           value: 'DuckLake',
           label: 'DuckLake',
@@ -129,34 +124,88 @@ export const DestinationTypeSelection = () => {
         },
       ],
     },
+    {
+      label: 'Deprecated',
+      options: [
+        {
+          value: 'Analytics Bucket',
+          label: 'Analytics Bucket',
+          description: 'Write Apache Iceberg tables to Supabase Storage for analytics workflows',
+          stage: 'Deprecated',
+          enabled: isOptionVisible('Analytics Bucket', etlEnableIceberg),
+        },
+      ],
+    },
+    {
+      label: 'Other',
+      options: [
+        {
+          value: 'Read Replica',
+          label: 'Read Replica',
+          description:
+            'Deploy a read-only database in another region for lower latency and workload isolation',
+          stage: null,
+          enabled: !hideReadReplica && isOptionVisible('Read Replica', infrastructureReadReplicas),
+        },
+      ],
+    },
   ]
 
   const visibleGroups = groups
     .map((group) => ({ ...group, options: group.options.filter((option) => option.enabled) }))
     .filter((group) => group.options.length > 0)
 
-  const selectedOption = visibleGroups
-    .flatMap((group) => group.options)
-    .find((option) => option.value === destinationType)
+  const allVisibleOptions = visibleGroups.flatMap((group) => group.options)
+  const selectedOption = allVisibleOptions.find((option) => option.value === destinationType)
 
   const stageDescription =
-    selectedOption?.stage === 'Public Alpha' ? (
-      <>
-        In public alpha and may change.{' '}
-        <InlineLink href="https://github.com/orgs/supabase/discussions/39416">
-          Leave feedback
-        </InlineLink>
-      </>
-    ) : selectedOption?.stage === 'Early Access' ? (
-      <>
-        In early access and may change.{' '}
-        <InlineLink href="https://github.com/orgs/supabase/discussions/39416">
-          Leave feedback
-        </InlineLink>
-      </>
-    ) : selectedOption?.stage === 'Deprecated' ? (
-      'This destination type is deprecated.'
-    ) : null
+    selectedOption?.stage === 'Public Alpha'
+      ? 'In public alpha and may change.'
+      : selectedOption?.stage === 'Early Access'
+        ? 'In early access and may change.'
+        : selectedOption?.stage === 'Deprecated'
+          ? 'This destination type is deprecated.'
+          : null
+
+  if (variant === 'radio') {
+    return (
+      <div className={cn('space-y-6', className)} role="group" aria-label="Destination type">
+        {visibleGroups.map((group) => (
+          <div key={group.label ?? group.options[0]?.value} className="space-y-3">
+            {group.label ? (
+              <p className="text-xs uppercase tracking-wider text-foreground-lighter">
+                {group.label}
+              </p>
+            ) : null}
+            <RadioGroupStacked
+              disabled={isTypeLocked}
+              value={destinationType ?? undefined}
+              onValueChange={(value) => setDestinationType(value as DestinationType)}
+            >
+              {group.options.map((option) => (
+                <RadioGroupStackedItem
+                  key={option.value}
+                  id={`destination-type-${option.value}`}
+                  value={option.value}
+                  label={
+                    <span className="flex items-center gap-x-2">
+                      <DestinationIcon
+                        type={option.value}
+                        size={16}
+                        className="shrink-0 text-foreground-light"
+                      />
+                      {option.label}
+                    </span>
+                  }
+                  description={option.description}
+                />
+              ))}
+            </RadioGroupStacked>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   const typeDescription =
     !editMode || stageDescription ? (
@@ -171,12 +220,12 @@ export const DestinationTypeSelection = () => {
     <FormItemLayout
       isReactForm={false}
       layout="horizontal"
-      className="p-5 [&>div]:gap-y-1 [&>div>span]:text-foreground-lighter"
+      className={cn('p-5 [&>div]:gap-y-1 [&>div>span]:text-foreground-lighter', className)}
       label="Type"
       description={typeDescription}
     >
       <Select
-        disabled={editMode}
+        disabled={isTypeLocked}
         value={destinationType ?? undefined}
         onValueChange={(value) => setDestinationType(value as DestinationType)}
       >
@@ -188,22 +237,7 @@ export const DestinationTypeSelection = () => {
                 size={20}
                 className="shrink-0 text-foreground-light"
               />
-              <div className="flex items-center gap-x-2">
-                <span className="text-sm text-foreground">{selectedOption.label}</span>
-                {selectedOption.stage && (
-                  <Badge
-                    variant={
-                      selectedOption.stage === 'Early Access'
-                        ? 'warning'
-                        : selectedOption.stage === 'Deprecated'
-                          ? 'destructive'
-                          : 'default'
-                    }
-                  >
-                    {selectedOption.stage}
-                  </Badge>
-                )}
-              </div>
+              <span className="text-sm text-foreground">{selectedOption.label}</span>
             </div>
           ) : (
             <span className="text-foreground-lighter">Select a destination type</span>
@@ -211,9 +245,9 @@ export const DestinationTypeSelection = () => {
         </SelectTrigger>
         <SelectContent align="end">
           {visibleGroups.map((group, index) => (
-            <SelectGroup key={group.label}>
+            <SelectGroup key={group.label ?? group.options[0]?.value}>
               {index > 0 && <SelectSeparator />}
-              <SelectLabel>{group.label}</SelectLabel>
+              {group.label ? <SelectLabel>{group.label}</SelectLabel> : null}
               {group.options.map((option) => (
                 <SelectItem key={option.value} value={option.value} className="py-2">
                   <div className="flex items-center gap-x-3">
@@ -223,22 +257,7 @@ export const DestinationTypeSelection = () => {
                       className="shrink-0 text-foreground-light"
                     />
                     <div className="flex flex-col gap-y-0.5">
-                      <div className="flex items-center gap-x-2">
-                        <span className="text-foreground">{option.label}</span>
-                        {option.stage && (
-                          <Badge
-                            variant={
-                              option.stage === 'Early Access'
-                                ? 'warning'
-                                : option.stage === 'Deprecated'
-                                  ? 'destructive'
-                                  : 'default'
-                            }
-                          >
-                            {option.stage}
-                          </Badge>
-                        )}
-                      </div>
+                      <span className="text-foreground">{option.label}</span>
                       <span className="text-xs text-foreground-lighter">{option.description}</span>
                     </div>
                   </div>

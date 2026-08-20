@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'common'
 import { Database } from 'icons'
-import { MoreVertical, Plus, Search, X } from 'lucide-react'
+import { MessageSquare, MoreVertical, Plus, Search, X } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { parseAsStringEnum, useQueryState } from 'nuqs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -25,12 +26,17 @@ import { Input } from 'ui-patterns/DataInputs/Input'
 import { EmptyStatePresentational } from 'ui-patterns/EmptyStatePresentational'
 import { GenericSkeletonLoader } from 'ui-patterns/ShimmeringLoader'
 
+import {
+  getCreatePipelineHref,
+  getFirstEnabledPipelineType,
+  isPipelineDestinationType,
+} from './CreatePipeline/CreatePipelineWizard.utils'
 import { DestinationPanel } from './DestinationPanel/DestinationPanel'
 import { DestinationType } from './DestinationPanel/DestinationPanel.types'
 import { DestinationRow } from './DestinationRow'
 import { DisablePipelinesDialog } from './DisablePipelinesDialog'
 import { EnablePipelinesModal } from './EnablePipelinesCallout'
-import { REPLICA_STATUS } from './Replication.constants'
+import { PIPELINES_FEEDBACK_URL, REPLICA_STATUS } from './Replication.constants'
 import {
   useIsETLBigQueryPrivateAlpha,
   useIsETLClickHousePrivateAlpha,
@@ -59,6 +65,7 @@ import { useShortcut } from '@/state/shortcuts/useShortcut'
 
 export const Destinations = () => {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { ref: projectRef } = useParams()
   const { data: organization } = useSelectedOrganizationQuery()
 
@@ -69,19 +76,16 @@ export const Destinations = () => {
   const etlEnableClickHouse = useIsETLClickHousePrivateAlpha()
   const { infrastructureReadReplicas } = useIsFeatureEnabled(['infrastructure:read_replicas'])
 
-  const newDestinationDefaultType = infrastructureReadReplicas
-    ? 'Read Replica'
-    : etlEnableBigQuery
-      ? 'BigQuery'
-      : etlEnableIceberg
-        ? 'Analytics Bucket'
-        : etlEnableDucklake
-          ? 'DuckLake'
-          : etlEnableSnowflake
-            ? 'Snowflake'
-            : etlEnableClickHouse
-              ? 'ClickHouse'
-              : null
+  const firstPipelineType = getFirstEnabledPipelineType({
+    BigQuery: etlEnableBigQuery,
+    'Analytics Bucket': etlEnableIceberg,
+    DuckLake: etlEnableDucklake,
+    Snowflake: etlEnableSnowflake,
+    ClickHouse: etlEnableClickHouse,
+  })
+  const canAddPipeline = firstPipelineType !== null
+  const canAddReplica = infrastructureReadReplicas
+  const canAddDestination = canAddPipeline || canAddReplica
 
   const prefetchedRef = useRef(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -90,7 +94,7 @@ export const Destinations = () => {
   const [showEnablePipelinesDialog, setShowEnablePipelinesDialog] = useState(false)
   const [showDisablePipelinesDialog, setShowDisablePipelinesDialog] = useState(false)
 
-  const [_, setDestinationType] = useQueryState(
+  const [urlDestinationType, setDestinationType] = useQueryState(
     'destinationType',
     parseAsStringEnum<DestinationType>([
       'Read Replica',
@@ -174,10 +178,23 @@ export const Destinations = () => {
   const isLocalETLNotSetUp = checkLocalETLNotSetUp(destinationsError)
   const hasErrorsFetchingData = (!isLocalETLNotSetUp && isDestinationsError) || isDatabasesError
 
-  const openDestinationPanel = () => {
-    if (!newDestinationDefaultType) return
-    setDestinationType(newDestinationDefaultType)
+  const openReplicaPanel = () => {
+    setDestinationType('Read Replica')
   }
+
+  const openCreate = () => {
+    if (!projectRef) return
+    if (canAddPipeline && firstPipelineType) {
+      router.push(getCreatePipelineHref(projectRef, firstPipelineType))
+      return
+    }
+    if (canAddReplica) openReplicaPanel()
+  }
+
+  useEffect(() => {
+    if (!projectRef || !isPipelineDestinationType(urlDestinationType)) return
+    router.replace(getCreatePipelineHref(projectRef, urlDestinationType))
+  }, [projectRef, router, urlDestinationType])
 
   useShortcut(
     SHORTCUT_IDS.LIST_PAGE_FOCUS_SEARCH,
@@ -273,6 +290,9 @@ export const Destinations = () => {
                   View Pipelines usage
                 </Link>
               </DropdownMenuItem>
+              {canAddReplica && (
+                <DropdownMenuItem onClick={openReplicaPanel}>Add read replica</DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {replicationNotEnabled ? (
                 <DropdownMenuItem onClick={() => setShowEnablePipelinesDialog(true)}>
@@ -295,20 +315,25 @@ export const Destinations = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Button asChild variant="default" icon={<MessageSquare />}>
+            <a href={PIPELINES_FEEDBACK_URL} target="_blank" rel="noreferrer noopener">
+              Leave feedback
+            </a>
+          </Button>
           <DocsButton href={`${DOCS_URL}/guides/database/replication`} />
 
           <Shortcut
             id={SHORTCUT_IDS.LIST_PAGE_NEW_ITEM}
             label="Add destination"
-            onTrigger={openDestinationPanel}
-            options={{ enabled: !!newDestinationDefaultType }}
+            onTrigger={openCreate}
+            options={{ enabled: canAddDestination }}
             side="bottom"
           >
             <Button
               variant="primary"
               icon={<Plus />}
-              disabled={!newDestinationDefaultType}
-              onClick={openDestinationPanel}
+              disabled={!canAddDestination}
+              onClick={openCreate}
             >
               Add destination
             </Button>
@@ -389,8 +414,8 @@ export const Destinations = () => {
               <Button
                 variant="default"
                 icon={<Plus />}
-                disabled={!newDestinationDefaultType}
-                onClick={openDestinationPanel}
+                disabled={!canAddDestination}
+                onClick={openCreate}
               >
                 Add destination
               </Button>
