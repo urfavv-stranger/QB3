@@ -138,7 +138,7 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/guides/reports/:match*',
-    destination: '/docs/guides/observability/:match*',
+    destination: '/docs/guides/monitoring-and-debugging/:match*',
   },
   {
     permanent: true,
@@ -366,7 +366,7 @@ module.exports = [
   {
     permanent: false,
     source: '/docs/client/generating-types',
-    destination: '/docs/reference/javascript/generating-types',
+    destination: '/docs/guides/api/rest/generating-types',
   },
   {
     permanent: false,
@@ -1306,52 +1306,52 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-branch-list',
-    destination: '/docs/reference/supabase-branches-list',
+    destination: '/docs/reference/cli/supabase-branches-list',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-branch-create',
-    destination: '/docs/reference/supabase-branches-create',
+    destination: '/docs/reference/cli/supabase-branches-create',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-branch-delete',
-    destination: '/docs/reference/supabase-branches-delete',
+    destination: '/docs/reference/cli/supabase-branches-delete',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-switch',
-    destination: '/docs/reference/supabase-branches-create',
+    destination: '/docs/reference/cli/supabase-branches-create',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-changes',
-    destination: '/docs/reference/supabase-db-diff',
+    destination: '/docs/reference/cli/supabase-db-diff',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-commit',
-    destination: '/docs/reference/supabase-db-pull',
+    destination: '/docs/reference/cli/supabase-db-pull',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-remote-set',
-    destination: '/docs/reference/supabase-link',
+    destination: '/docs/reference/cli/supabase-link',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-remote-changes',
-    destination: '/docs/reference/supabase-db-diff',
+    destination: '/docs/reference/cli/supabase-db-diff',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-db-remote-commit',
-    destination: '/docs/reference/supabase-db-pull',
+    destination: '/docs/reference/cli/supabase-db-pull',
   },
   {
     permanent: true,
     source: '/docs/reference/cli/supabase-gen-types-typescript',
-    destination: '/docs/reference/supabase-gen-types',
+    destination: '/docs/reference/cli/supabase-gen-types',
   },
 
   {
@@ -1440,70 +1440,70 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-getuser',
-    destination: '/docs/reference/javascript/v1/auth-api-getuser',
+    destination: '/docs/reference/javascript/auth-getuser',
   },
   // v1: /auth-api-resetpasswordforemail
   // v2: /auth-resetpasswordforemail
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-resetpasswordforemail',
-    destination: '/docs/reference/javascript/v1/auth-api-resetpasswordforemail',
+    destination: '/docs/reference/javascript/auth-resetpasswordforemail',
   },
   // v1: /auth-api-verifyotp
   // v2: /auth-verifyotp
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-verifyotp',
-    destination: '/docs/reference/javascript/v1/auth-api-verifyotp',
+    destination: '/docs/reference/javascript/auth-verifyotp',
   },
   // v1: /auth-api-listusers
   // v2: /auth-admin-listusers
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-listusers',
-    destination: '/docs/reference/javascript/v1/auth-api-listusers',
+    destination: '/docs/reference/javascript/auth-admin-listusers',
   },
   // v1: /auth-api-createuser
   // v2: /auth-admin-createuser
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-createuser',
-    destination: '/docs/reference/javascript/v1/auth-api-createuser',
+    destination: '/docs/reference/javascript/auth-admin-createuser',
   },
   // v1: /auth-api-deleteuser
   // v2: /auth-admin-deleteuser
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-deleteuser',
-    destination: '/docs/reference/javascript/v1/auth-api-deleteuser',
+    destination: '/docs/reference/javascript/auth-admin-deleteuser',
   },
   // v1: /auth-api-generatelink
   // v2: /auth-admin-generatelink
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-generatelink',
-    destination: '/docs/reference/javascript/v1/auth-api-generatelink',
+    destination: '/docs/reference/javascript/auth-admin-generatelink',
   },
   // v1: /auth-api-inviteuserbyemail
   // v2: /auth-admin-inviteuserbyemail
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-inviteuserbyemail',
-    destination: '/docs/reference/javascript/v1/auth-api-inviteuserbyemail',
+    destination: '/docs/reference/javascript/auth-admin-inviteuserbyemail',
   },
   // v1: /auth-api-getuserbyid
   // v2: /auth-admin-getuserbyid
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-getuserbyid',
-    destination: '/docs/reference/javascript/v1/auth-api-getuserbyid',
+    destination: '/docs/reference/javascript/auth-admin-getuserbyid',
   },
   // v1: /auth-api-updateuserbyid
   // v2: /auth-admin-updateuserbyid
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-updateuserbyid',
-    destination: '/docs/reference/javascript/v1/auth-api-updateuserbyid',
+    destination: '/docs/reference/javascript/auth-admin-updateuserbyid',
   },
   // signIn method is now split into signInWithPassword ,signInWithOtp ,signInWithOAuth
   // send traffic to v1 docs instead
@@ -1524,7 +1524,7 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/javascript/auth-api-sendmobileotp',
-    destination: '/docs/reference/javascript/v1/auth-api-sendmobileotp',
+    destination: '/docs/reference/javascript/auth-signinwithotp',
   },
 
   // realtime methods been replaced with new names
@@ -1596,12 +1596,25 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/dart/removesubscription',
-    destination: '/docs/reference/dart/v0/removesubscription',
+    destination: '/docs/reference/dart/removechannel',
   },
   {
     permanent: true,
     source: '/docs/reference/dart/getsubscriptions',
-    destination: '/docs/reference/dart/v0/getsubscriptions',
+    destination: '/docs/reference/dart/getchannels',
+  },
+  // The Dart reference kept no v0 archive, so anything already pointing into
+  // /v0/ needs bridging to the renamed page the way auth-signinwithprovider is
+  // above. Non-permanent so a cached 301 to the removed page can recover.
+  {
+    permanent: false,
+    source: '/docs/reference/dart/v0/removesubscription',
+    destination: '/docs/reference/dart/removechannel',
+  },
+  {
+    permanent: false,
+    source: '/docs/reference/dart/v0/getsubscriptions',
+    destination: '/docs/reference/dart/getchannels',
   },
   {
     permanent: true,
@@ -2067,32 +2080,32 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/javascript',
-    destination: '/docs/reference/javascript/start',
+    destination: '/docs/reference/javascript/introduction',
   },
   {
     permanent: true,
     source: '/docs/reference/dart',
-    destination: '/docs/reference/dart/start',
+    destination: '/docs/reference/dart/introduction',
   },
   {
     permanent: true,
     source: '/docs/reference/python',
-    destination: '/docs/reference/python/start',
+    destination: '/docs/reference/python/introduction',
   },
   {
     permanent: true,
     source: '/docs/reference/csharp',
-    destination: '/docs/reference/csharp/start',
+    destination: '/docs/reference/csharp/introduction',
   },
   {
     permanent: true,
     source: '/docs/reference/swift',
-    destination: '/docs/reference/swift/start',
+    destination: '/docs/reference/swift/introduction',
   },
   {
     permanent: true,
     source: '/docs/reference/kotlin',
-    destination: '/docs/reference/kotlin/start',
+    destination: '/docs/reference/kotlin/introduction',
   },
   {
     permanent: true,
@@ -2355,11 +2368,6 @@ module.exports = [
     destination: '/docs/guides/database/extensions/pg_repack',
   },
   {
-    permanent: false,
-    source: '/docs/guides/database/extensions/pg_partman',
-    destination: '/docs/guides/database/extensions',
-  },
-  {
     permanent: true,
     source: '/docs/guides/ai/structured-unstructured-embeddings',
     destination: '/docs/guides/ai/structured-unstructured',
@@ -2372,7 +2380,7 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/guides/cli/using-environment-variables-in-config',
-    destination: '/docs/guides/cli/managing-config',
+    destination: '/docs/guides/local-development/managing-config',
   },
   {
     permanent: true,
@@ -2679,7 +2687,7 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/reference/dart/sign-in-with-apple',
-    destination: '/docs/reference/dart/sign-in-with-id-token',
+    destination: '/docs/reference/dart/auth-signinwithidtoken',
   },
   {
     permanent: true,
@@ -2894,17 +2902,17 @@ module.exports = [
   {
     permanent: true,
     source: '/docs/guides/functions/debugging',
-    destination: '/docs/functions/logging',
+    destination: '/docs/guides/functions/logging',
   },
   {
     permanent: true,
     source: '/docs/guides/functions/log-drains',
-    destination: '/docs/platform/log-drains',
+    destination: '/docs/guides/monitoring-and-debugging/log-drains',
   },
   {
     permanent: true,
     source: '/docs/guides/functions/functions-headers',
-    destination: '/docs/functions/logging',
+    destination: '/docs/guides/functions/logging',
   },
   {
     permanent: true,
@@ -2972,6 +2980,29 @@ module.exports = [
     source: '/docs/guides/cli/managing-environments',
     destination: '/docs/guides/deployment/managing-environments',
   },
+  // These have to stay above the `/docs/guides/cli/:path*` catch-all below.
+  // Next matches redirects in order, so the catch-all would otherwise send
+  // them to `/docs/guides/local-development/cli/...`, which does not exist.
+  {
+    permanent: true,
+    source: '/docs/guides/cli/github-actions/:path*',
+    destination: '/docs/guides/deployment/ci/:path*',
+  },
+  {
+    permanent: true,
+    source: '/docs/guides/cli/github-action/:path*',
+    destination: '/docs/guides/deployment/ci/:path*',
+  },
+  {
+    permanent: true,
+    source: '/docs/guides/cli/cicd-workflow',
+    destination: '/docs/guides/deployment/managing-environments',
+  },
+  {
+    permanent: true,
+    source: '/docs/guides/cli/seeding-your-database',
+    destination: '/docs/guides/local-development/seeding-your-database',
+  },
   {
     permanent: true,
     source: '/docs/guides/cli/:path*',
@@ -2984,6 +3015,29 @@ module.exports = [
     permanent: false,
     source: '/docs/guides/local-development/cli/managing-environments',
     destination: '/docs/guides/deployment/managing-environments',
+  },
+  // Same reasoning as the entry above, for the paths the catch-all used to
+  // send people to. The old `/docs/guides/cli/:path*` rule was permanent, so
+  // browsers that already followed it have these dead targets cached.
+  {
+    permanent: false,
+    source: '/docs/guides/local-development/cli/github-actions/:path*',
+    destination: '/docs/guides/deployment/ci/:path*',
+  },
+  {
+    permanent: false,
+    source: '/docs/guides/local-development/cli/github-action/:path*',
+    destination: '/docs/guides/deployment/ci/:path*',
+  },
+  {
+    permanent: false,
+    source: '/docs/guides/local-development/cli/cicd-workflow',
+    destination: '/docs/guides/deployment/managing-environments',
+  },
+  {
+    permanent: false,
+    source: '/docs/guides/local-development/cli/seeding-your-database',
+    destination: '/docs/guides/local-development/seeding-your-database',
   },
   {
     permanent: true,
@@ -3014,11 +3068,6 @@ module.exports = [
     permanent: true,
     source: '/docs/guides/platform/shared-responsibility-model',
     destination: '/docs/guides/deployment/shared-responsibility-model',
-  },
-  {
-    permanent: true,
-    source: '/docs/guides/cli/github-actions/:path*',
-    destination: '/docs/guides/deployment/ci/:path*',
   },
   {
     permanent: true,
