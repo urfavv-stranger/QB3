@@ -600,7 +600,7 @@ Dedicated Poolers provide an alternative to Supavisor for specific use cases, gi
     icon: Database,
     products: [PRODUCT_SHORTNAMES.DATABASE],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/guides/database/connecting-to-postgres#serverside-poolers',
+    docsUrl: 'https://supabase.com/docs/guides/database/connecting-to-postgres#server-side-poolers',
     slug: 'dedicated-poolers',
     status: {
       stage: PRODUCT_STAGES.GA,
@@ -952,7 +952,7 @@ Broadcast from Database provides a powerful way to trigger real-time events dire
     icon: DatabaseZap,
     products: [PRODUCT_SHORTNAMES.REALTIME],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/guides/realtime/broadcast#broadcast-from-database',
+    docsUrl: 'https://supabase.com/docs/guides/realtime/broadcast#broadcast-from-the-database',
     slug: 'realtime-broadcast-from-database',
     status: {
       stage: PRODUCT_STAGES.PUBLIC_BETA,
@@ -2699,7 +2699,7 @@ This feature is particularly valuable for developers looking to build dynamic we
     icon: JsIcon,
     products: [ADDITIONAL_PRODUCTS.PLATFORM],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/reference/javascript/start',
+    docsUrl: 'https://supabase.com/docs/reference/javascript/introduction',
     slug: 'client-library-javascript',
     status: {
       stage: PRODUCT_STAGES.GA,
@@ -2724,7 +2724,7 @@ This feature is particularly useful for Flutter developers aiming to create resp
     icon: FlutterIcon,
     products: [ADDITIONAL_PRODUCTS.PLATFORM],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/reference/dart/start',
+    docsUrl: 'https://supabase.com/docs/reference/dart/introduction',
     slug: 'client-library-flutter',
     status: {
       stage: PRODUCT_STAGES.GA,
@@ -2749,7 +2749,7 @@ This feature is particularly valuable for iOS developers looking to leverage the
     icon: SwiftIcon,
     products: [ADDITIONAL_PRODUCTS.PLATFORM],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/reference/swift/start',
+    docsUrl: 'https://supabase.com/docs/reference/swift/introduction',
     slug: 'client-library-swift',
     status: {
       stage: PRODUCT_STAGES.GA,
@@ -2774,7 +2774,7 @@ This feature is especially beneficial for Python developers looking to build rob
     icon: PythonIcon,
     products: [ADDITIONAL_PRODUCTS.PLATFORM],
     heroImage: '',
-    docsUrl: 'https://supabase.com/docs/reference/python/start',
+    docsUrl: 'https://supabase.com/docs/reference/python/introduction',
     slug: 'client-library-python',
     status: {
       stage: PRODUCT_STAGES.BETA,
