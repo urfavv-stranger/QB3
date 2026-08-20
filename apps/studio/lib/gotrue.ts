@@ -5,6 +5,29 @@ import { gotrueClient } from 'common/gotrue'
 export const auth = gotrueClient
 
 export const DEFAULT_FALLBACK_PATH = '/organizations'
+export const DEFAULT_SIGNUP_RETURN_PATH = '/new'
+
+/** Post-signup redirect path, normalising returnTo and excluding it from merged query params. */
+export function buildSignUpReturnPath(returnTo: string | string[] | undefined): string {
+  const value = Array.isArray(returnTo) ? returnTo[0] : returnTo
+  const basePath = validateReturnTo(value || DEFAULT_SIGNUP_RETURN_PATH, DEFAULT_SIGNUP_RETURN_PATH)
+  const [pathOnly, pathQuery] = basePath.split('?', 2)
+  const pathnameSearchParams = new URLSearchParams(pathQuery || '')
+
+  if (typeof location === 'undefined') {
+    const queryString = pathnameSearchParams.toString()
+    return queryString ? `${pathOnly}?${queryString}` : pathOnly
+  }
+
+  const mergedParams = new URLSearchParams(location.search)
+  mergedParams.delete('returnTo')
+  for (const [key, val] of pathnameSearchParams.entries()) {
+    mergedParams.set(key, val)
+  }
+
+  const queryString = mergedParams.toString()
+  return queryString ? `${pathOnly}?${queryString}` : pathOnly
+}
 
 export const validateReturnTo = (
   returnTo: string,
